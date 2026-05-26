@@ -1,0 +1,103 @@
+# Elasticsearch Helm values — production 3-node cluster
+# Chart: elastic/elasticsearch (https://helm.elastic.co)
+# Chart version: 8.5.1
+
+clusterName: "elk-production"
+nodeGroup: "master"
+
+# ── Replicas & roles ──────────────────────────────────────────────────────────
+replicas: 3
+minimumMasterNodes: 2  # quorum = floor(3/2)+1
+
+roles:
+  - master
+  - data
+  - data_content
+  - data_hot
+  - ingest
+
+# ── Resources ─────────────────────────────────────────────────────────────────
+resources:
+  requests:
+    cpu: "500m"
+    memory: "2Gi"
+  limits:
+    memory: "2Gi"
+
+esJavaOpts: "-Xmx1g -Xms1g"
+
+# ── Storage ───────────────────────────────────────────────────────────────────
+volumeClaimTemplate:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: "gp3"
+  resources:
+    requests:
+      storage: 100Gi
+
+# ── Security ──────────────────────────────────────────────────────────────────
+protocol: https
+esConfig:
+  elasticsearch.yml: |
+    xpack.security.enabled: true
+    xpack.security.transport.ssl.enabled: true
+    xpack.security.transport.ssl.verification_mode: certificate
+    xpack.security.transport.ssl.keystore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+    xpack.security.transport.ssl.truststore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+    xpack.security.http.ssl.enabled: true
+    xpack.security.http.ssl.keystore.path: /usr/share/elasticsearch/config/certs/elastic-certificates.p12
+    cluster.routing.allocation.disk.threshold_enabled: true
+    cluster.routing.allocation.disk.watermark.low: "85%"
+    cluster.routing.allocation.disk.watermark.high: "90%"
+    cluster.routing.allocation.disk.watermark.flood_stage: "95%"
+
+secretMounts:
+  - name: elastic-certificates
+    secretName: elastic-certificates
+    path: /usr/share/elasticsearch/config/certs
+
+# ── ILM & index templates ─────────────────────────────────────────────────────
+# Applied via ilm/policies.json after deployment
+
+# ── Pod disruption budget ─────────────────────────────────────────────────────
+maxUnavailable: 1
+
+# ── Affinity — spread across AZs ─────────────────────────────────────────────
+podAntiAffinity: "hard"
+antiAffinityTopologyKey: "topology.kubernetes.io/zone"
+
+# ── Probes ────────────────────────────────────────────────────────────────────
+readinessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  successThreshold: 3
+  timeoutSeconds: 5
+
+# ── Prometheus metrics ────────────────────────────────────────────────────────
+extraContainers:
+  - name: metrics
+    image: quay.io/prometheuscommunity/elasticsearch-exporter:v1.7.0
+    args:
+      - --es.uri=https://localhost:9200
+      - --es.all
+      - --es.ssl-skip-verify
+    env:
+      - name: ES_USERNAME
+        valueFrom:
+          secretKeyRef:
+            name: elasticsearch-master-credentials
+            key: username
+      - name: ES_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: elasticsearch-master-credentials
+            key: password
+    ports:
+      - containerPort: 9114
+        name: metrics
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        memory: 128Mi

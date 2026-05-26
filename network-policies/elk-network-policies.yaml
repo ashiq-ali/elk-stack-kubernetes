@@ -1,0 +1,164 @@
+---
+# Default deny-all ingress for the logging namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: logging
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+
+---
+# Elasticsearch: allow inter-node transport (9300) and HTTP (9200) from within logging ns
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-elasticsearch-internal
+  namespace: logging
+spec:
+  podSelector:
+    matchLabels:
+      app: elasticsearch-master
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Inter-node transport
+    - from:
+        - podSelector:
+            matchLabels:
+              app: elasticsearch-master
+      ports:
+        - port: 9300
+    # HTTP API from Logstash, Kibana, metrics exporter
+    - from:
+        - podSelector:
+            matchLabels:
+              app: logstash-logstash
+        - podSelector:
+            matchLabels:
+              app: kibana-kibana
+        - podSelector:
+            matchLabels:
+              app: elasticsearch-master  # metrics sidecar
+      ports:
+        - port: 9200
+  egress:
+    # Allow DNS
+    - ports:
+        - port: 53
+          protocol: UDP
+    # Inter-node transport
+    - to:
+        - podSelector:
+            matchLabels:
+              app: elasticsearch-master
+      ports:
+        - port: 9300
+
+---
+# Logstash: accept beats input from Filebeat; send to Elasticsearch
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-logstash
+  namespace: logging
+spec:
+  podSelector:
+    matchLabels:
+      app: logstash-logstash
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Beats input on ports 5044/5045/5046
+    - from:
+        - podSelector:
+            matchLabels:
+              app: filebeat-filebeat
+        - namespaceSelector: {}  # Filebeat is a DaemonSet — all namespaces
+      ports:
+        - port: 5044
+        - port: 5045
+        - port: 5046
+  egress:
+    - ports:
+        - port: 53
+          protocol: UDP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: elasticsearch-master
+      ports:
+        - port: 9200
+
+---
+# Kibana: accept ingress from nginx ingress controller
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-kibana-ingress
+  namespace: logging
+spec:
+  podSelector:
+    matchLabels:
+      app: kibana-kibana
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: 5601
+  egress:
+    - ports:
+        - port: 53
+          protocol: UDP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: elasticsearch-master
+      ports:
+        - port: 9200
+
+---
+# Filebeat: allow egress to Logstash (DaemonSet — runs in kube-system-equivalent)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-filebeat-egress
+  namespace: logging
+spec:
+  podSelector:
+    matchLabels:
+      app: filebeat-filebeat
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - port: 53
+          protocol: UDP
+    - to:
+        - podSelector:
+            matchLabels:
+              app: logstash-logstash
+      ports:
+        - port: 5044
+        - port: 5045
+        - port: 5046
+    # Kubernetes API for autodiscovery metadata
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - port: 443

@@ -1,0 +1,160 @@
+# Logstash Helm values — multi-pipeline configuration
+# Chart: elastic/logstash
+
+replicas: 2
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "1Gi"
+  limits:
+    memory: "1.5Gi"
+
+logstashJavaOpts: "-Xmx768m -Xms768m"
+
+# ── Pipeline configuration (mounted from ConfigMaps) ─────────────────────────
+logstashConfig:
+  logstash.yml: |
+    http.host: "0.0.0.0"
+    xpack.monitoring.enabled: true
+    xpack.monitoring.elasticsearch.username: logstash_system
+    xpack.monitoring.elasticsearch.password: "${LOGSTASH_MONITORING_PASSWORD}"
+    xpack.monitoring.elasticsearch.hosts: ["https://elasticsearch-master:9200"]
+    xpack.monitoring.elasticsearch.ssl.certificate_authority: /usr/share/logstash/config/certs/ca.crt
+    pipeline.workers: 2
+    pipeline.batch.size: 250
+
+  pipelines.yml: |
+    - pipeline.id: microservices
+      path.config: "/usr/share/logstash/pipeline/microservices.conf"
+      pipeline.workers: 2
+
+    - pipeline.id: nginx
+      path.config: "/usr/share/logstash/pipeline/nginx.conf"
+      pipeline.workers: 1
+
+    - pipeline.id: kubernetes
+      path.config: "/usr/share/logstash/pipeline/kubernetes.conf"
+      pipeline.workers: 1
+
+# ── Pipelines (inline for simplicity; see pipelines/ for full configs) ────────
+logstashPipeline:
+  microservices.conf: |
+    input {
+      beats {
+        port => 5044
+        tags => ["microservice"]
+      }
+    }
+    filter {
+      if "microservice" in [tags] {
+        json { source => "message" }
+        date { match => ["timestamp", "ISO8601"] }
+        mutate {
+          add_field => { "[@metadata][index_prefix]" => "microservices" }
+          remove_field => ["timestamp", "host", "agent"]
+        }
+        if [level] == "ERROR" or [level] == "FATAL" {
+          mutate { add_tag => ["error"] }
+        }
+      }
+    }
+    output {
+      elasticsearch {
+        hosts => ["https://elasticsearch-master:9200"]
+        index => "%{[@metadata][index_prefix]}-%{+YYYY.MM.dd}"
+        user => "${ELASTICSEARCH_USERNAME}"
+        password => "${ELASTICSEARCH_PASSWORD}"
+        ssl => true
+        ssl_certificate_authorities => ["/usr/share/logstash/config/certs/ca.crt"]
+      }
+    }
+
+  nginx.conf: |
+    input {
+      beats {
+        port => 5045
+        tags => ["nginx"]
+      }
+    }
+    filter {
+      if "nginx" in [tags] {
+        grok {
+          match => { "message" => "%{COMBINEDAPACHELOG}" }
+        }
+        geoip { source => "clientip" }
+        useragent { source => "agent" target => "user_agent" }
+        mutate {
+          convert => { "bytes" => "integer" "response" => "integer" }
+          add_field => { "[@metadata][index_prefix]" => "nginx-access" }
+          remove_field => ["message"]
+        }
+      }
+    }
+    output {
+      elasticsearch {
+        hosts => ["https://elasticsearch-master:9200"]
+        index => "%{[@metadata][index_prefix]}-%{+YYYY.MM.dd}"
+        user => "${ELASTICSEARCH_USERNAME}"
+        password => "${ELASTICSEARCH_PASSWORD}"
+        ssl => true
+        ssl_certificate_authorities => ["/usr/share/logstash/config/certs/ca.crt"]
+      }
+    }
+
+  kubernetes.conf: |
+    input {
+      beats {
+        port => 5046
+        tags => ["kubernetes"]
+      }
+    }
+    filter {
+      if "kubernetes" in [tags] {
+        if [message] =~ /^\{/ {
+          json { source => "message" }
+        }
+        mutate {
+          add_field => {
+            "k8s_namespace"   => "%{[kubernetes][namespace]}"
+            "k8s_pod"         => "%{[kubernetes][pod][name]}"
+            "k8s_container"   => "%{[kubernetes][container][name]}"
+            "[@metadata][index_prefix]" => "k8s-logs"
+          }
+          remove_field => ["message", "host", "agent", "input", "log", "ecs"]
+        }
+      }
+    }
+    output {
+      elasticsearch {
+        hosts => ["https://elasticsearch-master:9200"]
+        index => "%{[@metadata][index_prefix]}-%{+YYYY.MM.dd}"
+        user => "${ELASTICSEARCH_USERNAME}"
+        password => "${ELASTICSEARCH_PASSWORD}"
+        ssl => true
+        ssl_certificate_authorities => ["/usr/share/logstash/config/certs/ca.crt"]
+      }
+    }
+
+# ── Secrets ───────────────────────────────────────────────────────────────────
+extraEnvs:
+  - name: ELASTICSEARCH_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: elasticsearch-master-credentials
+        key: username
+  - name: ELASTICSEARCH_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: elasticsearch-master-credentials
+        key: password
+  - name: LOGSTASH_MONITORING_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: logstash-monitoring-credentials
+        key: password
+
+secretMounts:
+  - name: elastic-certs
+    secretName: elastic-certificates
+    path: /usr/share/logstash/config/certs

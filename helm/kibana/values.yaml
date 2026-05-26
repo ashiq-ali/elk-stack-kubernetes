@@ -1,0 +1,73 @@
+# Kibana Helm values
+# Chart: elastic/kibana
+
+replicas: 2
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "1Gi"
+  limits:
+    memory: "1Gi"
+
+kibanaConfig:
+  kibana.yml: |
+    server.host: "0.0.0.0"
+    server.name: "kibana"
+    server.publicBaseUrl: "https://kibana.example.com"
+    elasticsearch.hosts: ["https://elasticsearch-master:9200"]
+    elasticsearch.username: "${ELASTICSEARCH_USERNAME}"
+    elasticsearch.password: "${ELASTICSEARCH_PASSWORD}"
+    elasticsearch.ssl.certificateAuthorities: ["/usr/share/kibana/config/certs/ca.crt"]
+    xpack.security.encryptionKey: "${KIBANA_ENCRYPTION_KEY}"
+    xpack.encryptedSavedObjects.encryptionKey: "${SAVED_OBJECTS_ENCRYPTION_KEY}"
+    xpack.reporting.encryptionKey: "${REPORTING_ENCRYPTION_KEY}"
+    logging.appenders.default.type: json
+    monitoring.ui.container.elasticsearch.enabled: true
+
+extraEnvs:
+  - name: ELASTICSEARCH_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: elasticsearch-master-credentials
+        key: username
+  - name: ELASTICSEARCH_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: elasticsearch-master-credentials
+        key: password
+  - name: KIBANA_ENCRYPTION_KEY
+    valueFrom:
+      secretKeyRef:
+        name: kibana-encryption-keys
+        key: encryptionKey
+  - name: SAVED_OBJECTS_ENCRYPTION_KEY
+    valueFrom:
+      secretKeyRef:
+        name: kibana-encryption-keys
+        key: savedObjectsKey
+  - name: REPORTING_ENCRYPTION_KEY
+    valueFrom:
+      secretKeyRef:
+        name: kibana-encryption-keys
+        key: reportingKey
+
+secretMounts:
+  - name: elastic-certs
+    secretName: elastic-certificates
+    path: /usr/share/kibana/config/certs
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: kibana.example.com
+      paths:
+        - path: /
+  tls:
+    - secretName: kibana-tls
+      hosts:
+        - kibana.example.com

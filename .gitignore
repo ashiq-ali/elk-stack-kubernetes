@@ -1,0 +1,19 @@
+# Secrets
+*-secret.yaml
+*.secret.yaml
+secrets/
+.env
+.env.*
+elastic-certificates*
+
+# Helm
+charts/
+*.tgz
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
