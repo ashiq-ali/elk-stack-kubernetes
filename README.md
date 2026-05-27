@@ -11,7 +11,9 @@
 
 ## Architecture
 
-> 📐 **[Open in Excalidraw](docs/architecture.excalidraw)** — interactive diagram you can edit at [excalidraw.com](https://excalidraw.com)
+![Architecture Diagram](docs/architecture.svg)
+
+> 📐 **[Edit in Excalidraw](docs/architecture.excalidraw)** — open the `.excalidraw` file at [excalidraw.com](https://excalidraw.com) to edit interactively.
 
 ```
   App Pods (100+ microservices)
