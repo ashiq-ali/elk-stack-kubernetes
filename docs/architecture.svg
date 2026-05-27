@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="545" viewBox="0 0 920 545" style="font-family: ui-monospace, 'Cascadia Code', monospace; background: #0d1117;">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  <text x="460" y="30" text-anchor="middle" fill="#58a6ff" font-size="16" font-weight="700">elk-stack-kubernetes</text>
+  <text x="460" y="50" text-anchor="middle" fill="#6e7681" font-size="11">Elasticsearch · Logstash · Kibana · Filebeat · ILM Cost Management</text>
+  <rect x="20" y="70" width="150" height="280" rx="10" fill="none" stroke="#388bfd" stroke-width="1" stroke-dasharray="5,4"/>
+  <rect x="30" y="63" width="68" height="14" rx="3" fill="#0d1117"/>
+  <text x="36" y="73" fill="#388bfd" font-size="11" font-weight="600">App Pods</text>
+  <rect x="30" y="93" width="128" height="42" rx="6" fill="#1c2433" stroke="#388bfd" stroke-width="1.2"/>
+  <text x="94" y="114" text-anchor="middle" fill="#79c0ff" font-size="12">nginx</text>
+  <rect x="30" y="150" width="128" height="42" rx="6" fill="#1c2433" stroke="#388bfd" stroke-width="1.2"/>
+  <text x="94" y="171" text-anchor="middle" fill="#79c0ff" font-size="12">api-gateway</text>
+  <rect x="30" y="207" width="128" height="42" rx="6" fill="#1c2433" stroke="#388bfd" stroke-width="1.2"/>
+  <text x="94" y="228" text-anchor="middle" fill="#79c0ff" font-size="12">auth-svc</text>
+  <rect x="30" y="264" width="128" height="42" rx="6" fill="#1c2433" stroke="#388bfd" stroke-width="1.2"/>
+  <text x="94" y="285" text-anchor="middle" fill="#79c0ff" font-size="12">payment-svc</text>
+  <rect x="200" y="150" width="150" height="130" rx="10" fill="none" stroke="#f7e042" stroke-width="1" stroke-dasharray="5,4"/>
+  <rect x="210" y="143" width="68" height="14" rx="3" fill="#0d1117"/>
+  <text x="216" y="153" fill="#f7e042" font-size="11" font-weight="600">Filebeat</text>
+  <rect x="213" y="172" width="125" height="40" rx="6" fill="#2d2a00" stroke="#f7e042" stroke-width="1.2"/>
+  <text x="275" y="184" text-anchor="middle" fill="#e3b341" font-size="11">DaemonSet</text>
+  <text x="275" y="200" text-anchor="middle" fill="#e3b341" font-size="11">(1 per node)</text>
+  <rect x="213" y="225" width="125" height="40" rx="6" fill="#2d2a00" stroke="#f7e042" stroke-width="1.2"/>
+  <text x="275" y="237" text-anchor="middle" fill="#e3b341" font-size="11">autodiscover</text>
+  <text x="275" y="253" text-anchor="middle" fill="#e3b341" font-size="11">K8s labels</text>
+  <rect x="385" y="100" width="185" height="270" rx="10" fill="none" stroke="#3fb950" stroke-width="1" stroke-dasharray="5,4"/>
+  <rect x="395" y="93" width="68" height="14" rx="3" fill="#0d1117"/>
+  <text x="401" y="103" fill="#3fb950" font-size="11" font-weight="600">Logstash</text>
+  <rect x="398" y="122" width="158" height="50" rx="6" fill="#0d2b0f" stroke="#3fb950" stroke-width="1.2"/>
+  <text x="477" y="139" text-anchor="middle" fill="#57ab5a" font-size="11">microservices</text>
+  <text x="477" y="155" text-anchor="middle" fill="#57ab5a" font-size="11">pipeline (JSON→ES)</text>
+  <rect x="398" y="185" width="158" height="50" rx="6" fill="#0d2b0f" stroke="#3fb950" stroke-width="1.2"/>
+  <text x="477" y="202" text-anchor="middle" fill="#57ab5a" font-size="11">nginx pipeline</text>
+  <text x="477" y="218" text-anchor="middle" fill="#57ab5a" font-size="11">(grok + geoip)</text>
+  <rect x="398" y="248" width="158" height="50" rx="6" fill="#0d2b0f" stroke="#3fb950" stroke-width="1.2"/>
+  <text x="477" y="265" text-anchor="middle" fill="#57ab5a" font-size="11">k8s events</text>
+  <text x="477" y="281" text-anchor="middle" fill="#57ab5a" font-size="11">pipeline (warnings)</text>
+  <rect x="398" y="315" width="158" height="40" rx="6" fill="#161b22" stroke="#30363d" stroke-width="1.2"/>
+  <text x="477" y="335" text-anchor="middle" fill="#6e7681" font-size="11">DLQ → dead-letter</text>
+  <rect x="605" y="100" width="185" height="200" rx="10" fill="none" stroke="#f0883e" stroke-width="1" stroke-dasharray="5,4"/>
+  <rect x="615" y="93" width="103" height="14" rx="3" fill="#0d1117"/>
+  <text x="621" y="103" fill="#f0883e" font-size="11" font-weight="600">Elasticsearch</text>
+  <rect x="618" y="122" width="158" height="40" rx="6" fill="#2d1200" stroke="#f0883e" stroke-width="1.2"/>
+  <text x="697" y="134" text-anchor="middle" fill="#ffa657" font-size="11">3-node cluster</text>
+  <text x="697" y="150" text-anchor="middle" fill="#ffa657" font-size="11">shard-aware AZs</text>
+  <rect x="618" y="175" width="158" height="35" rx="6" fill="#2d1200" stroke="#f0883e" stroke-width="1.2"/>
+  <text x="697" y="192" text-anchor="middle" fill="#ffa657" font-size="11">node-1  (hot/SSD)</text>
+  <rect x="618" y="218" width="158" height="35" rx="6" fill="#2d1200" stroke="#f0883e" stroke-width="1.2"/>
+  <text x="697" y="235" text-anchor="middle" fill="#ffa657" font-size="11">node-2  (hot/SSD)</text>
+  <rect x="618" y="261" width="158" height="35" rx="6" fill="#2d1200" stroke="#f0883e" stroke-width="1.2"/>
+  <text x="697" y="278" text-anchor="middle" fill="#ffa657" font-size="11">node-3  (hot/SSD)</text>
+  <rect x="605" y="325" width="185" height="115" rx="10" fill="none" stroke="#a371f7" stroke-width="1" stroke-dasharray="5,4"/>
+  <rect x="615" y="318" width="82" height="14" rx="3" fill="#0d1117"/>
+  <text x="621" y="328" fill="#a371f7" font-size="11" font-weight="600">ILM Policy</text>
+  <rect x="618" y="348" width="158" height="82" rx="6" fill="#1b1535" stroke="#a371f7" stroke-width="1.2"/>
+  <text x="697" y="365" text-anchor="middle" fill="#d2a8ff" font-size="11">hot  →  7d  (SSD)</text>
+  <text x="697" y="381" text-anchor="middle" fill="#d2a8ff" font-size="11">warm →  30d (HDD)</text>
+  <text x="697" y="397" text-anchor="middle" fill="#d2a8ff" font-size="11">cold  →  90d (frozen)</text>
+  <text x="697" y="413" text-anchor="middle" fill="#d2a8ff" font-size="11">delete → 90d+</text>
+  <rect x="605" y="460" width="185" height="60" rx="6" fill="#161b22" stroke="#388bfd" stroke-width="1.2"/>
+  <text x="697" y="482" text-anchor="middle" fill="#79c0ff" font-size="11">Kibana Dashboards</text>
+  <text x="697" y="498" text-anchor="middle" fill="#79c0ff" font-size="11">Error rate · Latency · Infra health</text>
+  <defs><marker id="ar4" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#6e7681"/></marker></defs>
+  <line x1="170" y1="210" x2="200" y2="210" stroke="#f7e042" stroke-width="1.5" marker-end="url(#ar4)"/>
+  <text x="185" y="205" text-anchor="middle" fill="#f7e042" font-size="10">logs</text>
+  <line x1="350" y1="210" x2="385" y2="210" stroke="#3fb950" stroke-width="1.5" marker-end="url(#ar4)"/>
+  <text x="367" y="205" text-anchor="middle" fill="#3fb950" font-size="10">beats</text>
+  <line x1="570" y1="200" x2="605" y2="200" stroke="#f0883e" stroke-width="1.5" marker-end="url(#ar4)"/>
+  <text x="587" y="195" text-anchor="middle" fill="#f0883e" font-size="10">index</text>
+  <line x1="697" y1="300" x2="697" y2="325" stroke="#6e7681" stroke-width="1.5" marker-end="url(#ar4)"/>
+  <line x1="697" y1="440" x2="697" y2="460" stroke="#6e7681" stroke-width="1.5" marker-end="url(#ar4)"/>
+
+</svg>
